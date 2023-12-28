@@ -5,35 +5,38 @@ const datos = [{'Ean3': {'nombre_producto': 'Product6', 'datos_query': ('SKU6', 
 function App() {
 
   const [productos, setProductos] = useState(datos);
-  console.log(productos)
-  
+  const [filter, setFilter] = useState('');
   useEffect(() => {
+    //Si no hay texto en el filtro, mostrar todos los productos
+    if(filter === '') {
+      setProductos(datos);
+      return;
+    }
+    //Filtrar productos y eliminar los que no cumplan con el filtro cada un segundo
+    const filteredProducts = productos.filter(producto => {
+      return producto[Object.keys(producto)[0]].nombre_producto.toLowerCase().includes(filter.toLowerCase())
+    })
+    let productAux = productos;
+    //Recorrer los productos filtrados y eliminar los que no cumplan con el filtro cada un segundo
+    let i = 0;
+    const interval = setInterval(() => {
+      if (i < productos.length) {
+        if (!filteredProducts.includes(productos[i])) {
+          //Remover el producto
+          productAux = productAux.filter(producto => producto !== productos[i])
+          setProductos(productAux)
+        }
+        i++;
+      } else {
+        clearInterval(interval)
+      }
+    }, 1000)
 
-  },[productos])
+  },[filter, productos])
 
   const handleFilter = (e) => {
-    //Filtrar por el nombre
-    //Si no esta escrito nada, mostrar todos los productos
-    if (e.target.value === "") {
-      setProductos(datos)
-      return
-    } else{
-      //Recorrer el objeto
-      const filtered = Object.keys(datos[0]).filter((ean) => 
-        //Handle case sensitive
-        datos[0][ean].nombre_producto.toLowerCase().includes(e.target.value.toLowerCase())
-      )
-      //Crear un objeto con los productos filtrados
-      const filteredProducts = {}
-      filtered.forEach((ean) => {
-        filteredProducts[ean] = datos[0][ean]
-      })
-      setTimeout(() => {
-        console.log(filteredProducts)
-      }, 1000)
-      //Actualizar el estado
-      setProductos([filteredProducts])
-    }
+    //Filtrar
+    setFilter(e.target.value);
   }
   return (
     <div
