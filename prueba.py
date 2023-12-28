@@ -101,30 +101,32 @@ def agregar_datos(conn):
 def transformar_datos(datos, query):
     response = []
     #Diccionario para agrupar por EAN
-    dict = {}
     for dato in datos:
         #Desempaquetar la tupla
         sku, name, ean, market, precio = dato
-        #Si el ean no esta en el diccionario, lo agregamos
-        if ean not in dict:
-            dict[ean] = {
-                "nombre_producto": name,
-                "datos_query": query,
-                "markets": [market],
-                "rango_precios": (precio, precio)
-            }  
-        else:
-            #Si el ean esta en el diccionario, agregamos el market
-            if market not in dict[ean]["markets"]:
-                dict[ean]["markets"].append(market)
-            #Actualizamos el rango de precios (mayor precio, menor precio)
-            #Si el precio actual es mayor al maximo, lo actualizamos
-            if precio > dict[ean]["rango_precios"][0]:
-                dict[ean]["rango_precios"] = (precio, dict[ean]["rango_precios"][1])
-            elif precio < dict[ean]["rango_precios"][1]:
-                dict[ean]["rango_precios"] = (dict[ean]["rango_precios"][0], precio)
-                
-    response.append(dict)
+        #Tiene que ser un arreglo de diccionarios
+        #Identificar si el ean actual esta en el array de diccionarios con un flag
+        flag = False
+        for diccionario in response:
+            if ean in diccionario:
+                flag = True
+                if market not in diccionario[ean]["markets"]:
+                    diccionario[ean]["markets"].append(market)
+                if precio > diccionario[ean]["rango_precios"][0]:
+                    diccionario[ean]["rango_precios"] = (precio, diccionario[ean]["rango_precios"][1])
+                elif precio < diccionario[ean]["rango_precios"][1]:
+                    diccionario[ean]["rango_precios"] = (diccionario[ean]["rango_precios"][0], precio)
+                break
+        if not flag:
+            response.append({
+                ean: {
+                    "nombre_producto": name,
+                    "datos_query": dato,
+                    "markets": [market],
+                    "rango_precios": (precio, precio)
+                }
+            })
+
     return response
 
 def consultar_datos(conn):
